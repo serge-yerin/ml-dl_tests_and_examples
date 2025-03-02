@@ -5,26 +5,6 @@ from torchvision import datasets
 from torchvision.transforms import ToTensor, Lambda, Compose
 import matplotlib.pyplot as plt
 
-# Download training data from open datasets.
-training_data = datasets.FashionMNIST(root="data", train=True, download=True, transform=ToTensor(),)
-
-# Download test data from open datasets.
-test_data = datasets.FashionMNIST(root="data", train=False, download=True, transform=ToTensor(),)
-
-batch_size = 64
-
-# Create data loaders.
-train_dataloader = DataLoader(training_data, batch_size=batch_size)
-test_dataloader = DataLoader(test_data, batch_size=batch_size)
-
-for X, y in test_dataloader:
-    print("Shape of X [N, C, H, W]: ", X.shape)
-    print("Shape of y: ", y.shape, y.dtype)
-    break
-
-# Get cpu or gpu device for training.
-device = "cuda" if torch.cuda.is_available() else "cpu"
-print(f"Using {device} device")
 
 
 # Define model
@@ -36,6 +16,7 @@ class NeuralNetwork(nn.Module):
             nn.Linear(28*28, 512),
             nn.ReLU(),
             nn.Linear(512, 512),
+            nn.Dropout(p=0.7),  # Dropout layer with 50% probability
             nn.ReLU(),
             nn.Linear(512, 10)
         )
@@ -44,13 +25,6 @@ class NeuralNetwork(nn.Module):
         x = self.flatten(x)
         logits = self.linear_relu_stack(x)
         return logits
-
-
-model = NeuralNetwork().to(device)
-print(model)
-
-loss_fn = nn.CrossEntropyLoss()
-optimizer = torch.optim.SGD(model.parameters(), lr=1e-3)
 
 
 def train(dataloader, model, loss_fn, optimizer):
@@ -70,7 +44,7 @@ def train(dataloader, model, loss_fn, optimizer):
 
         if batch % 100 == 0:
             loss, current = loss.item(), batch * len(X)
-            print(f"loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+            print(f"Loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
 
 
 def test(dataloader, model, loss_fn):
@@ -86,27 +60,72 @@ def test(dataloader, model, loss_fn):
             correct += (pred.argmax(1) == y).type(torch.float).sum().item()
     test_loss /= num_batches
     correct /= size
-    print(f"Test Error: \n Accuracy: {(100*correct):>0.1f}%, Avg loss: {test_loss:>8f} \n")
+    print(f"\n Test Error: \n Accuracy: {(100 * correct):>0.1f}%,    Avg loss: {test_loss:>8f} \n")
 
 
-epochs = 5
-for t in range(epochs):
-    print(f"Epoch {t+1}\n-------------------------------")
-    train(train_dataloader, model, loss_fn, optimizer)
-    test(test_dataloader, model, loss_fn)
-print("Done!")
 
-torch.save(model.state_dict(), "model.pth")
-print("Saved PyTorch Model State to model.pth")
+if __name__ == '__main__':
 
-model = NeuralNetwork()
-model.load_state_dict(torch.load("model.pth"))
+    no_epochs = 8
+    loss_fn = nn.CrossEntropyLoss()
+    batch_size = 64
+    learning_rate = 1e-3
 
-classes = ["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot",]
 
-model.eval()
-x, y = test_data[0][0], test_data[0][1]
-with torch.no_grad():
-    pred = model(x)
-    predicted, actual = classes[pred[0].argmax(0)], classes[y]
-    print(f'Predicted: "{predicted}", Actual: "{actual}"')
+    # Download training data from open datasets.
+    training_data = datasets.FashionMNIST(root="data", train=True, download=True, transform=ToTensor(),)
+
+    # Download test data from open datasets.
+    test_data = datasets.FashionMNIST(root="data", train=False, download=True, transform=ToTensor(),)
+
+    # Create data loaders.
+    train_dataloader = DataLoader(training_data, batch_size=batch_size)
+    test_dataloader = DataLoader(test_data, batch_size=batch_size)
+
+    for X, y in test_dataloader:
+        print("Shape of X [N, C, H, W]: ", X.shape)
+        print("Shape of y: ", y.shape, y.dtype)
+        break
+
+    # Get cpu or gpu device for training.
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    print(f"\n Using {device} device")
+
+
+    model = NeuralNetwork().to(device)
+    print('\n', model)
+
+    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+
+    # Training loop
+    for t in range(no_epochs):
+        print(f"Epoch {t+1}\n-------------------------------")
+        train(train_dataloader, model, loss_fn, optimizer)
+        test(test_dataloader, model, loss_fn)
+
+    print("\n Training is finished!")
+
+    torch.save(model.state_dict(), "model.pth")
+    print("\n PyTorch Model State saved to model.pth")
+
+    model = NeuralNetwork()
+    model.load_state_dict(torch.load("model.pth"))
+
+    classes = ["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot",]
+
+    model.eval()
+
+    x, y = test_data[0][0], test_data[0][1]
+
+    print('\n Image size:   ', x.size())
+    print('\n Class number: ', y)
+
+    with torch.no_grad():
+        pred = model(x)
+        predicted, actual = classes[pred[0].argmax(0)], classes[y]
+
+        print(pred[0].argmax(0))
+        
+        print(pred)
+
+        print(f'Predicted: "{predicted}", Actual: "{actual}"')
