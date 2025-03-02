@@ -120,8 +120,8 @@ if __name__ == '__main__':
 
     # Plot training loss
     plt.subplot(2, 2, 1)
-    plt.plot(val_losses)
-    plt.title('Training Loss', label='Wrong')
+    plt.plot(val_losses, label='Wrong')
+    plt.title('Training Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
     plt.legend()
