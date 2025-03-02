@@ -1,7 +1,7 @@
 numpy
 matplotlib
 skipy
-sckikit-learn
+scikit-learn
 torch
 torchvision
 torchaudio
