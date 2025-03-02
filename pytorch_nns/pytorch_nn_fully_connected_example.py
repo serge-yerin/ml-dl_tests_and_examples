@@ -7,24 +7,46 @@ import matplotlib.pyplot as plt
 
 
 
-# Define model
+# # Define model
+# class NeuralNetwork(nn.Module):
+#     def __init__(self):
+#         super(NeuralNetwork, self).__init__()
+#         self.flatten = nn.Flatten()
+#         self.linear_relu_stack = nn.Sequential(
+#             nn.Linear(28*28, 512),
+#             nn.ReLU(),
+#             nn.Linear(512, 512),
+#             nn.Dropout(p=0.7),  # Dropout layer with 50% probability
+#             nn.ReLU(),
+#             nn.Linear(512, 10)
+#         )
+
+#     def forward(self, x):
+#         x = self.flatten(x)
+#         logits = self.linear_relu_stack(x)
+#         return logits
+
+
 class NeuralNetwork(nn.Module):
     def __init__(self):
-        super(NeuralNetwork, self).__init__()
+        super().__init__()
         self.flatten = nn.Flatten()
-        self.linear_relu_stack = nn.Sequential(
-            nn.Linear(28*28, 512),
-            nn.ReLU(),
-            nn.Linear(512, 512),
-            nn.Dropout(p=0.7),  # Dropout layer with 50% probability
-            nn.ReLU(),
-            nn.Linear(512, 10)
-        )
-
+        self.layer1 = nn.Linear(28*28, 512)
+        self.act1 = nn.ReLU()
+        self.dropout1 = nn.Dropout(0.3)  # probability of an element to be zeroed.
+        self.layer2 = nn.Linear(512, 512)
+        self.act2 = nn.ReLU()
+        self.dropout2 = nn.Dropout(0.3)  # probability of an element to be zeroed.
+        self.layer3 = nn.Linear(512, 10)        
+ 
     def forward(self, x):
         x = self.flatten(x)
-        logits = self.linear_relu_stack(x)
-        return logits
+        x = self.dropout1(self.act1(self.layer1(x)))
+        x = self.dropout2(self.act2(self.layer2(x)))
+        x = self.layer3(x)
+        return x
+
+
 
 
 def train(dataloader, model, loss_fn, optimizer):
@@ -95,7 +117,8 @@ if __name__ == '__main__':
     model = NeuralNetwork().to(device)
     print('\n', model)
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    # optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
+    optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
     # Training loop
     for t in range(no_epochs):
