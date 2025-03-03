@@ -9,6 +9,7 @@ __pycache__/
 # Data
 data/
 results/
+*.pth
 
 # C extensions
 *.so
