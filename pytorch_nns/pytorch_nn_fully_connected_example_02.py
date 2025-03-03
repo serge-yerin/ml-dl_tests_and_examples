@@ -1,9 +1,11 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+import torchvision
 from torchvision import datasets
 from torchvision.transforms import ToTensor, Lambda, Compose
 import matplotlib.pyplot as plt
+import numpy as np
 
 
 class NeuralNetwork(nn.Module):
@@ -30,6 +32,8 @@ class NeuralNetwork(nn.Module):
 
 def train(dataloader, model, loss_fn, optimizer):
     size = len(dataloader.dataset)
+    train_loss, correct = 0, 0
+    num_batches = len(dataloader)
     model.train()
     for batch, (X, y) in enumerate(dataloader):
         X, y = X.to(device), y.to(device)
@@ -37,6 +41,9 @@ def train(dataloader, model, loss_fn, optimizer):
         # Compute prediction error
         pred = model(X)
         loss = loss_fn(pred, y)
+
+        train_loss += loss_fn(pred, y).item()
+        correct += (pred.argmax(1) == y).type(torch.float).sum().item()
 
         # Backpropagation
         optimizer.zero_grad()
@@ -46,6 +53,11 @@ def train(dataloader, model, loss_fn, optimizer):
         if batch % 100 == 0:
             loss, current = loss.item(), batch * len(X)
             print(f"Loss: {loss:>7f}  [{current:>5d}/{size:>5d}]")
+        
+    train_loss /= num_batches
+    correct /= size
+
+    return train_loss, 100*correct   # loss.detach().numpy()
 
 
 def test(dataloader, model, loss_fn):
@@ -66,12 +78,17 @@ def test(dataloader, model, loss_fn):
 
 
 
+
+
+
 if __name__ == '__main__':
 
-    no_epochs = 8
+    no_epochs = 12
     loss_fn = nn.CrossEntropyLoss()
     batch_size = 64
-    learning_rate = 1e-3
+    learning_rate = 1e-4  # 1e-3
+
+    classes = ["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot",]
 
 
     # Download training data from open datasets.
@@ -89,13 +106,31 @@ if __name__ == '__main__':
         print("Shape of y: ", y.shape, y.dtype)
         break
 
+    # # Helper function for inline image display
+    # def matplotlib_imshow(img, one_channel=False):
+    #     if one_channel:
+    #         img = img.mean(dim=0)
+    #     img = img / 2 + 0.5     # unnormalize
+    #     npimg = img.numpy()
+    #     if one_channel:
+    #         plt.imshow(npimg, cmap="Greys")
+    #     else:
+    #         plt.imshow(np.transpose(npimg, (1, 2, 0)))
+
+    # dataiter = iter(train_dataloader)
+    # images, labels = next(dataiter)
+
+    # # Create a grid from the images and show them
+    # img_grid = torchvision.utils.make_grid(images)
+    # matplotlib_imshow(img_grid, one_channel=True)
+    # print('  '.join(classes[labels[j]] for j in range(4)))
+
     # Get cpu or gpu device for training.
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"\n Using {device} device")
 
-
     model = NeuralNetwork().to(device)
-    print('\n', model)
+    print('\n', model, '\n')
 
     # optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
@@ -108,7 +143,11 @@ if __name__ == '__main__':
 
     for t in range(no_epochs):
         print(f"Epoch {t+1}\n-------------------------------")
-        train(train_dataloader, model, loss_fn, optimizer)
+
+        loss, acc = train(train_dataloader, model, loss_fn, optimizer)
+        train_losses.append(loss)
+        train_accuracies.append(acc)
+
         loss, acc = test(test_dataloader, model, loss_fn)
         val_losses.append(loss)
         val_accuracies.append(acc)
@@ -118,34 +157,20 @@ if __name__ == '__main__':
     # Plotting the Results
     plt.figure(figsize=(14, 10))
 
-    # Plot training loss
-    plt.subplot(2, 2, 1)
-    plt.plot(val_losses, label='Wrong')
-    plt.title('Training Loss')
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.legend()
-
-    # Plot validation loss
-    plt.subplot(2, 2, 2)
+    # Plot loss
+    plt.subplot(2, 1, 1)
     plt.plot(val_losses, label='Validation loss')
-    plt.title('Validation Loss')
+    plt.plot(train_losses, label='Train loss')
+    plt.title('Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
-    plt.legend()
-
-    # Plot training accuracy
-    plt.subplot(2, 2, 3)
-    plt.plot(val_accuracies, label='Wrong')
-    plt.title('Training Accuracy')
-    plt.xlabel('Epoch')
-    plt.ylabel('Accuracy (%)')
     plt.legend()
 
     # Plot validation accuracy
-    plt.subplot(2, 2, 4)
+    plt.subplot(2, 1, 2)
     plt.plot(val_accuracies, label='Validation accuracy')
-    plt.title('Validation Accuracy')
+    plt.plot(train_accuracies, label='Train accuracy')
+    plt.title('Accuracy')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy (%)')
     plt.legend()
@@ -160,21 +185,35 @@ if __name__ == '__main__':
     model = NeuralNetwork()
     model.load_state_dict(torch.load("model.pth"))
 
-    classes = ["T-shirt/top", "Trouser", "Pullover", "Dress", "Coat", "Sandal", "Shirt", "Sneaker", "Bag", "Ankle boot",]
-
+    
     model.eval()
 
-    x, y = test_data[0][0], test_data[0][1]
+    x, y = test_data[0][0], test_data[0][1]  # Image and its label
 
-    print('\n Image size:   ', x.size())
-    print('\n Class number: ', y)
+    print('\n Test sample image size:   ', x.size())
+    print('\n Test sample class number: ', y)
 
     with torch.no_grad():
-        pred = model(x)
-        predicted, actual = classes[pred[0].argmax(0)], classes[y]
-
-        print(pred[0].argmax(0))
+        pred = model(x)  # logits on the output 
         
-        print(pred)
+        class_num = np.squeeze(pred[0].argmax(0).numpy(), axis=0)
+        predicted, actual = classes[class_num], classes[y]
+        probabilities = (torch.softmax(pred, dim=1)).numpy()
+        probabilities = np.squeeze(probabilities, axis=0)
+        pred_class_prob = probabilities[class_num]*100
 
-        print(f'Predicted: "{predicted}", Actual: "{actual}"')
+        print('\n Predicted class number: ', class_num)
+
+        print('\n Predicted: ' + predicted + '    Actual: ' + actual + '    Probability: ' + \
+              str(np.round(pred_class_prob, 2)) + ' % ')
+        
+        
+        print('\n Tensor of predicted logits: \n', pred)
+        
+        print('\n Array of predicted probabilities: \n', probabilities)
+
+        print('\nSum of classes probabilities equals: ', np.sum(probabilities), '\n')
+        
+        
+
+        
