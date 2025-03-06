@@ -1,5 +1,7 @@
 numpy
 matplotlib
+seaborn
+pandas
 skipy
 scikit-learn
 torch
