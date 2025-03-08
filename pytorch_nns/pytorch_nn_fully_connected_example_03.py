@@ -167,7 +167,7 @@ def model_training(no_epochs, batch_size, learning_rate, loss_fn, model_path):
     return
 
 
-def inference(model_path):
+def model_inference(model_path):
     
     training_data, test_data, classes = data_loading()
 
@@ -199,6 +199,36 @@ def inference(model_path):
     return
 
 
+def visualize_dataset():
+    
+    training_data, test_data, classes = data_loading()
+
+    train_dataloader = DataLoader(training_data, batch_size=batch_size)
+
+    # Helper function for inline image display # https://pytorch.org/tutorials/beginner/introyt/trainingyt.html
+    def matplotlib_imshow(img, one_channel=False):
+        if one_channel:
+            img = img.mean(dim=0)
+        img = img / 2 + 0.5     # unnormalize
+        npimg = img.numpy()
+        if one_channel:
+            plt.imshow(npimg, cmap="Greys")
+        else:
+            plt.imshow(np.transpose(npimg, (1, 2, 0)))
+        plt.show()
+
+    dataiter = iter(train_dataloader)
+    images, labels = next(dataiter)
+
+    # Create a grid from the images and show them
+    img_grid = torchvision.utils.make_grid(images)
+    matplotlib_imshow(img_grid, one_channel=True)
+    print('  '.join(classes[labels[j]] for j in range(4)))
+
+    return
+
+
+
 if __name__ == '__main__':
 
     no_epochs = 5
@@ -209,28 +239,11 @@ if __name__ == '__main__':
 
     # model_training(no_epochs, batch_size, learning_rate, loss_fn, model_path)
 
-    inference(model_path)
+    # model_inference(model_path)
+
+    visualize_dataset()
 
 
-
-    # # Helper function for inline image display # https://pytorch.org/tutorials/beginner/introyt/trainingyt.html
-    # def matplotlib_imshow(img, one_channel=False):
-    #     if one_channel:
-    #         img = img.mean(dim=0)
-    #     img = img / 2 + 0.5     # unnormalize
-    #     npimg = img.numpy()
-    #     if one_channel:
-    #         plt.imshow(npimg, cmap="Greys")
-    #     else:
-    #         plt.imshow(np.transpose(npimg, (1, 2, 0)))
-
-    # dataiter = iter(train_dataloader)
-    # images, labels = next(dataiter)
-
-    # # Create a grid from the images and show them
-    # img_grid = torchvision.utils.make_grid(images)
-    # matplotlib_imshow(img_grid, one_channel=True)
-    # print('  '.join(classes[labels[j]] for j in range(4)))
 
 
 
