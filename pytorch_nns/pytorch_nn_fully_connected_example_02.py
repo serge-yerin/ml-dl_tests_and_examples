@@ -83,7 +83,7 @@ def test(dataloader, model, loss_fn):
 
 if __name__ == '__main__':
 
-    no_epochs = 12
+    no_epochs = 20
     loss_fn = nn.CrossEntropyLoss()
     batch_size = 64
     learning_rate = 1e-4  # 1e-3
@@ -106,7 +106,7 @@ if __name__ == '__main__':
         print("Shape of y: ", y.shape, y.dtype)
         break
 
-    # # Helper function for inline image display
+    # # Helper function for inline image display # https://pytorch.org/tutorials/beginner/introyt/trainingyt.html
     # def matplotlib_imshow(img, one_channel=False):
     #     if one_channel:
     #         img = img.mean(dim=0)
