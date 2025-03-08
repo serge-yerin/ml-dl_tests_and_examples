@@ -116,7 +116,7 @@ def plot_training_metrics(val_losses, train_losses, val_accuracies, train_accura
     return
 
 
-def model_training(no_epochs, batch_size, learning_rate, loss_fn, model_path):
+def model_training(no_epochs, batch_size, learning_rate, model_path):
     
     training_data, test_data, classes = data_loading()
 
@@ -138,6 +138,8 @@ def model_training(no_epochs, batch_size, learning_rate, loss_fn, model_path):
 
     # optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+    loss_fn = nn.CrossEntropyLoss()
 
     # Training loop
     train_losses = []
@@ -232,16 +234,15 @@ def visualize_dataset():
 if __name__ == '__main__':
 
     no_epochs = 5
-    loss_fn = nn.CrossEntropyLoss()
     batch_size = 64
     learning_rate = 1e-4  # 1e-3
     model_path = "model.pth"
 
-    # model_training(no_epochs, batch_size, learning_rate, loss_fn, model_path)
+    visualize_dataset()
+
+    # model_training(no_epochs, batch_size, learning_rate, model_path)
 
     # model_inference(model_path)
-
-    visualize_dataset()
 
 
 
