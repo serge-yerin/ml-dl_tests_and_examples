@@ -95,8 +95,8 @@ def plot_training_metrics(val_losses, train_losses, val_accuracies, train_accura
 
     # Plot loss
     plt.subplot(2, 1, 1)
+    plt.plot(train_losses, label='Training loss')
     plt.plot(val_losses, label='Validation loss')
-    plt.plot(train_losses, label='Train loss')
     plt.title('Loss')
     plt.xlabel('Epoch')
     plt.ylabel('Loss')
@@ -104,8 +104,8 @@ def plot_training_metrics(val_losses, train_losses, val_accuracies, train_accura
 
     # Plot validation accuracy
     plt.subplot(2, 1, 2)
+    plt.plot(train_accuracies, label='Training accuracy')
     plt.plot(val_accuracies, label='Validation accuracy')
-    plt.plot(train_accuracies, label='Train accuracy')
     plt.title('Accuracy')
     plt.xlabel('Epoch')
     plt.ylabel('Accuracy (%)')
