@@ -1,11 +1,19 @@
 import torch
 from torch import nn
 from torch.utils.data import DataLoader
+from torch.utils.data import Dataset, DataLoader
 import torchvision
 from torchvision import datasets
 from torchvision.transforms import ToTensor, Lambda, Compose
 import matplotlib.pyplot as plt
 import numpy as np
+
+import glob
+# import cv2
+
+
+
+
 
 
 class NeuralNetwork(nn.Module):
@@ -55,7 +63,7 @@ def train(dataloader, model, loss_fn, optimizer, device):
     train_loss /= num_batches
     correct /= size
 
-    return train_loss, 100*correct   # loss.detach().numpy()
+    return train_loss, 100*correct   
 
 
 def test(dataloader, model, loss_fn, device):
@@ -73,6 +81,38 @@ def test(dataloader, model, loss_fn, device):
     correct /= size
     print(f"\n Test Error: \n Accuracy: {(100 * correct):>0.1f}%,    Avg loss: {test_loss:>8f} \n")
     return test_loss, 100*correct
+
+
+
+
+class CustomDataset(Dataset):
+    def __init__(self):
+        # self.imgs_path = "Dog_Cat_Dataset/"
+        self.imgs_path = "../data/MNIST_Dataset_JPG/MNIST - JPG - training/"
+        file_list = glob.glob(self.imgs_path + "*")
+        print(file_list)
+        self.data = []
+        for class_path in file_list:
+            class_name = class_path.split("/")[-1]
+            for img_path in glob.glob(class_path + "/*.jpeg"):
+                self.data.append([img_path, class_name])
+        print(self.data)
+        # self.class_map = {"dogs" : 0, "cats": 1}
+        self.class_map = {"0" : 0, "1": 1, "2": 2, "3": 3, "4": 4, "5": 5, "6": 6, "7": 7, "8": 8, "9": 9}
+        # self.img_dim = (416, 416)
+        # self.img_dim = (28, 28)
+    def __len__(self):
+        return len(self.data)
+    def __getitem__(self, idx):
+        img_path, class_name = self.data[idx]
+        # img = cv2.imread(img_path)
+        # img = cv2.resize(img, self.img_dim)
+        # class_id = self.class_map[class_name]
+        # img_tensor = torch.from_numpy(img)
+        # img_tensor = img_tensor.permute(2, 0, 1)
+        # class_id = torch.tensor([class_id])
+        # return img_tensor, class_id
+
 
 
 def data_loading():
@@ -238,16 +278,21 @@ if __name__ == '__main__':
     learning_rate = 1e-4  # 1e-3
     model_path = "model.pth"
 
-    visualize_dataset()
+    # visualize_dataset()
 
     # model_training(no_epochs, batch_size, learning_rate, model_path)
 
     # model_inference(model_path)
 
+    # dataset = CustomDataset()
+    # data_loader = DataLoader(dataset, batch_size=4, shuffle=True)
 
 
 
-
+    # imgs_path = "../../data/MNIST_Dataset_JPG/MNIST - JPG - training/"
+    imgs_path = "./data/MNIST_Dataset_JPG/MNIST - JPG - training/"
+    file_list = glob.glob(imgs_path + "*")
+    print(file_list)
 
 
         
